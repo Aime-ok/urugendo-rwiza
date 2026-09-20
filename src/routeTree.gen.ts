@@ -10,33 +10,74 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedAhabanzaRouteImport } from './routes/_authenticated/ahabanza'
+import { Route as AuthenticatedKwiyigishaRouteImport } from './routes/_authenticated/kwiyigisha'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAhabanzaRoute = AuthenticatedAhabanzaRouteImport.update({
+  id: '/ahabanza',
+  path: '/ahabanza',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedKwiyigishaRoute = AuthenticatedKwiyigishaRouteImport.update({
+  id: '/kwiyigisha',
+  path: '/kwiyigisha',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/ahabanza': typeof AuthenticatedAhabanzaRoute
+  '/kwiyigisha': typeof AuthenticatedKwiyigishaRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/ahabanza': typeof AuthenticatedAhabanzaRoute
+  '/kwiyigisha': typeof AuthenticatedKwiyigishaRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/_authenticated/ahabanza': typeof AuthenticatedAhabanzaRoute
+  '/_authenticated/kwiyigisha': typeof AuthenticatedKwiyigishaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/auth' | '/ahabanza' | '/kwiyigisha'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/auth' | '/ahabanza' | '/kwiyigisha'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/_authenticated/ahabanza'
+    | '/_authenticated/kwiyigisha'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +89,54 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/ahabanza': {
+      id: '/_authenticated/ahabanza'
+      path: '/ahabanza'
+      fullPath: '/ahabanza'
+      preLoaderRoute: typeof AuthenticatedAhabanzaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/kwiyigisha': {
+      id: '/_authenticated/kwiyigisha'
+      path: '/kwiyigisha'
+      fullPath: '/kwiyigisha'
+      preLoaderRoute: typeof AuthenticatedKwiyigishaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAhabanzaRoute: typeof AuthenticatedAhabanzaRoute
+  AuthenticatedKwiyigishaRoute: typeof AuthenticatedKwiyigishaRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAhabanzaRoute: AuthenticatedAhabanzaRoute,
+  AuthenticatedKwiyigishaRoute: AuthenticatedKwiyigishaRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
