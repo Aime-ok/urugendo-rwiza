@@ -1,24 +1,52 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { AppShell } from "@/components/AppShell";
+import { Button } from "@/components/ui/button";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
-  component: Index,
+  head: () => ({
+    meta: [
+      { title: "Igira — Kwitegura ikizamini cy'uruhushya rw'agateganyo" },
+      {
+        name: "description",
+        content:
+          "Igira ni urubuga rwo kwitoza ikizamini cy'uruhushya rw'agateganyo mu Rwanda: kwiyigisha no gukora ibizamini mu Kinyarwanda.",
+      },
+      { property: "og:title", content: "Igira — Kwitegura ikizamini cy'uruhushya rw'agateganyo" },
+      {
+        property: "og:description",
+        content: "Kwiyigisha no gukora ibizamini by'amategeko y'umuhanda mu Kinyarwanda.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: Landing,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+function Landing() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) navigate({ to: "/ahabanza", replace: true });
+    });
+  }, [navigate]);
+
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
+    <AppShell>
+      <div className="mx-auto max-w-2xl text-center">
+        <h1 className="text-4xl font-extrabold sm:text-5xl">Igira</h1>
+        <p className="mt-3 text-foreground/80">
+          Witegure ikizamini cy'uruhushya rw'agateganyo: wiyigishe kandi ukore ibizamini mu Kinyarwanda.
+        </p>
+        <div className="mt-8">
+          <Button asChild size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
+            <Link to="/auth">Injira / Iyandikishe</Link>
+          </Button>
+        </div>
+      </div>
+    </AppShell>
   );
 }
