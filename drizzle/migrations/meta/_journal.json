@@ -15,6 +15,13 @@
       "when": 1789884462576,
       "tag": "0001_books_storage_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789990731903,
+      "tag": "0002_auth_roles_profiles_categories",
+      "breakpoints": true
     }
   ]
 }
