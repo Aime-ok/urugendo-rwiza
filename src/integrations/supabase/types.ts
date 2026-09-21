@@ -92,6 +92,27 @@ export type Database = {
         }
         Relationships: []
       }
+      categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       exam_attempts: {
         Row: {
           completed: boolean
@@ -174,28 +195,38 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
           created_at: string
           email: string | null
           full_name: string | null
           id: string
+          last_login: string | null
+          updated_at: string
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id: string
+          last_login?: string | null
+          updated_at?: string
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
+          last_login?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
       questions: {
         Row: {
           book_id: string | null
+          category_id: string | null
           correct_index: number
           created_at: string
           difficulty: string
@@ -203,10 +234,12 @@ export type Database = {
           id: string
           options: Json
           question_text: string
+          status: string
           topic: string | null
         }
         Insert: {
           book_id?: string | null
+          category_id?: string | null
           correct_index: number
           created_at?: string
           difficulty?: string
@@ -214,10 +247,12 @@ export type Database = {
           id?: string
           options: Json
           question_text: string
+          status?: string
           topic?: string | null
         }
         Update: {
           book_id?: string | null
+          category_id?: string | null
           correct_index?: number
           created_at?: string
           difficulty?: string
@@ -225,6 +260,7 @@ export type Database = {
           id?: string
           options?: Json
           question_text?: string
+          status?: string
           topic?: string | null
         }
         Relationships: [
@@ -233,6 +269,13 @@ export type Database = {
             columns: ["book_id"]
             isOneToOne: false
             referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "questions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
             referencedColumns: ["id"]
           },
         ]
