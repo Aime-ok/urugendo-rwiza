@@ -129,7 +129,17 @@ function AdminPage() {
         reader.onerror = () => reject(new Error("Gusoma dosiye byanze."));
         reader.readAsDataURL(file);
       });
-      const res = await upload({ data: { title: title.trim(), fileBase64: base64 } });
+
+      const buffer = new Uint8Array(await file.arrayBuffer());
+      const { extractText, getDocumentProxy } = await import("unpdf");
+      const pdf = await getDocumentProxy(buffer);
+      const { text } = await extractText(pdf, { mergePages: true });
+      const content = String(text).trim();
+      if (content.length < 200) {
+        throw new Error("Iyi PDF nta nyandiko isomeka irimo (ishobora kuba ari amafoto).");
+      }
+
+      const res = await upload({ data: { title: title.trim(), fileBase64: base64, content } });
       toast.success(`Igitabo cyabitswe (inyuguti ${res.characters}).`);
       setTitle("");
       setFile(null);
