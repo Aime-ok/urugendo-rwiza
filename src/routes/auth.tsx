@@ -120,7 +120,11 @@ function AuthPage() {
           </Button>
         </form>
 
-        <Button variant="outline" className="mt-3 w-full" onClick={handleGoogle}>
+        <Button
+          variant="outline"
+          className="mt-3 w-full border-border bg-card text-card-foreground hover:bg-secondary"
+          onClick={handleGoogle}
+        >
           Komeza na Google
         </Button>
 
