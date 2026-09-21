@@ -2,7 +2,12 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
-async function assertAdmin(supabase: { rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown }> }, userId: string) {
+type RpcClient = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  rpc: (fn: "has_role", args: { _user_id: string; _role: "admin" }) => any;
+};
+
+async function assertAdmin(supabase: RpcClient, userId: string) {
   const { data } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
   if (data !== true) throw new Error("Nta burenganzira bw'ubuyobozi ufite.");
 }
@@ -10,17 +15,20 @@ async function assertAdmin(supabase: { rpc: (fn: string, args: Record<string, un
 export const uploadBook = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    z.object({ title: z.string().min(1).max(200), fileBase64: z.string().min(10) }).parse(d),
+    z
+      .object({
+        title: z.string().min(1).max(200),
+        fileBase64: z.string().min(10),
+        content: z.string().min(1),
+      })
+      .parse(d),
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
 
     const binary = Uint8Array.from(atob(data.fileBase64), (c) => c.charCodeAt(0));
-    const { extractText, getDocumentProxy } = await import("unpdf");
-    const pdf = await getDocumentProxy(binary);
-    const { text } = await extractText(pdf, { mergePages: true });
-    const content = String(text).replace(/\s+\n/g, "\n").trim();
+    const content = data.content.replace(/[ \t]+\n/g, "\n").trim();
 
     if (content.length < 200) {
       throw new Error("Iki gitabo nta nyandiko gishoboye gusomwamo. Koresha PDF ifite inyandiko (atari amafoto).");
