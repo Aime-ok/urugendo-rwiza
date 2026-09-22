@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { getMe, claimAdmin } from "@/lib/account.functions";
+import { getMe } from "@/lib/account.functions";
 import {
   uploadBook,
   listBooks,
@@ -23,12 +23,12 @@ import {
   adminOverview,
 } from "@/lib/books.functions";
 
-export const Route = createFileRoute("/_authenticated/admin")({
+export const Route = createFileRoute("/_authenticated/admin/dashboard")({
   head: () => ({
     meta: [
-      { title: "Ubuyobozi — Igira" },
+      { title: "Ubuyobozi — Urugero Rwiza" },
       { name: "description", content: "Shyiraho igitabo cya PDF, ukore ibibazo, kandi ukurikirane abanyeshuri." },
-      { property: "og:title", content: "Ubuyobozi — Igira" },
+      { property: "og:title", content: "Ubuyobozi — Urugero Rwiza" },
       { property: "og:description", content: "Gucunga igitabo, ibibazo n'amanota y'abanyeshuri." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -59,7 +59,6 @@ const emptyDraft: Draft = {
 function AdminPage() {
   const qc = useQueryClient();
   const me = useServerFn(getMe);
-  const claim = useServerFn(claimAdmin);
   const upload = useServerFn(uploadBook);
   const books = useServerFn(listBooks);
   const activate = useServerFn(setActiveBook);
@@ -87,34 +86,6 @@ function AdminPage() {
   const [draft, setDraft] = useState<Draft | null>(null);
 
   const activeBook = (bookList ?? []).find((b) => b.is_active);
-
-  if (!isAdmin) {
-    return (
-      <AppShell right={<LogoutButton />}>
-        <Back />
-        <div className="mx-auto max-w-md rounded-2xl bg-card p-6 text-center text-card-foreground shadow-xl">
-          <h1 className="text-xl font-bold">Ubuyobozi</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Nta burenganzira bw'ubuyobozi ufite. Niba uri uwa mbere kuri uru rubuga, ushobora kubwifatira.
-          </p>
-          <Button
-            className="mt-4 bg-primary"
-            onClick={async () => {
-              try {
-                await claim({});
-                await qc.invalidateQueries();
-                toast.success("Ubu uri umuyobozi.");
-              } catch (e) {
-                toast.error(e instanceof Error ? e.message : "Byanze.");
-              }
-            }}
-          >
-            Mfata ubuyobozi
-          </Button>
-        </div>
-      </AppShell>
-    );
-  }
 
   async function handleUpload() {
     if (!file || !title.trim()) {
@@ -165,7 +136,7 @@ function AdminPage() {
   }
 
   return (
-    <AppShell right={<LogoutButton />}>
+    <AppShell right={<LogoutButton admin />}>
       <Back />
       <h1 className="mb-6 text-3xl font-extrabold">Ubuyobozi</h1>
 
@@ -404,8 +375,8 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 function Back() {
   return (
-    <Link to="/ahabanza" className="mb-6 inline-flex items-center gap-2 text-sm text-foreground/80 hover:underline">
-      <ArrowLeft className="size-4" /> Subira Ahabanza
+    <Link to="/dashboard" className="mb-6 inline-flex items-center gap-2 text-sm text-foreground/80 hover:underline">
+      <ArrowLeft className="size-4" /> Ahabanza
     </Link>
   );
 }

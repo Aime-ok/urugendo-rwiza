@@ -7,16 +7,16 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Igira — Kwitegura ikizamini cy'uruhushya rw'agateganyo" },
+      { title: "Urugero Rwiza — Kwitegura ikizamini cy'uruhushya" },
       {
         name: "description",
         content:
-          "Igira ni urubuga rwo kwitoza ikizamini cy'uruhushya rw'agateganyo mu Rwanda: kwiyigisha no gukora ibizamini mu Kinyarwanda.",
+          "Urugero Rwiza ni urubuga rwo kwitoza ikizamini cy'uruhushya rw'agateganyo mu Rwanda: wige amategeko y'umuhanda, witegure neza.",
       },
-      { property: "og:title", content: "Igira — Kwitegura ikizamini cy'uruhushya rw'agateganyo" },
+      { property: "og:title", content: "Urugero Rwiza — Kwitegura ikizamini cy'uruhushya" },
       {
         property: "og:description",
-        content: "Kwiyigisha no gukora ibizamini by'amategeko y'umuhanda mu Kinyarwanda.",
+        content: "Wige amategeko y'umuhanda, witegure neza. Ibizamini mu Kinyarwanda.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -30,20 +30,18 @@ function Landing() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/ahabanza", replace: true });
+      if (data.session) navigate({ to: "/dashboard", replace: true });
     });
   }, [navigate]);
 
   return (
     <AppShell>
       <div className="mx-auto max-w-2xl text-center">
-        <h1 className="text-4xl font-extrabold sm:text-5xl">Igira</h1>
-        <p className="mt-3 text-foreground/80">
-          Witegure ikizamini cy'uruhushya rw'agateganyo: wiyigishe kandi ukore ibizamini mu Kinyarwanda.
-        </p>
+        <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl">URUGERO RWIZA</h1>
+        <p className="mt-3 text-foreground/80">Wige amategeko y'umuhanda, witegure neza.</p>
         <div className="mt-8">
           <Button asChild size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
-            <Link to="/auth">Injira / Iyandikishe</Link>
+            <Link to="/login">Injira</Link>
           </Button>
         </div>
       </div>
