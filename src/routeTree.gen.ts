@@ -18,6 +18,7 @@ import { Route as AuthenticatedAhabanzaRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAmatekaRouteImport } from './routes/_authenticated/amateka'
 import { Route as AuthenticatedIkizaminiRouteImport } from './routes/_authenticated/ikizamini'
 import { Route as AuthenticatedKwiyigishaRouteImport } from './routes/_authenticated/kwiyigisha'
+import { Route as AdminLoginRouteImport } from './routes/admin/login'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -63,6 +64,11 @@ const AuthenticatedKwiyigishaRoute = AuthenticatedKwiyigishaRouteImport.update({
   path: '/kwiyigisha',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/admin/login',
+  path: '/admin/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/amateka': typeof AuthenticatedAmatekaRoute
   '/ikizamini': typeof AuthenticatedIkizaminiRoute
   '/kwiyigisha': typeof AuthenticatedKwiyigishaRoute
+  '/admin/login': typeof AdminLoginRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -83,6 +90,7 @@ export interface FileRoutesByTo {
   '/amateka': typeof AuthenticatedAmatekaRoute
   '/ikizamini': typeof AuthenticatedIkizaminiRoute
   '/kwiyigisha': typeof AuthenticatedKwiyigishaRoute
+  '/admin/login': typeof AdminLoginRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -95,6 +103,7 @@ export interface FileRoutesById {
   '/_authenticated/amateka': typeof AuthenticatedAmatekaRoute
   '/_authenticated/ikizamini': typeof AuthenticatedIkizaminiRoute
   '/_authenticated/kwiyigisha': typeof AuthenticatedKwiyigishaRoute
+  '/admin/login': typeof AdminLoginRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/amateka'
     | '/ikizamini'
     | '/kwiyigisha'
+    | '/admin/login'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -117,6 +127,7 @@ export interface FileRouteTypes {
     | '/amateka'
     | '/ikizamini'
     | '/kwiyigisha'
+    | '/admin/login'
   id:
     | '__root__'
     | '/'
@@ -128,6 +139,7 @@ export interface FileRouteTypes {
     | '/_authenticated/amateka'
     | '/_authenticated/ikizamini'
     | '/_authenticated/kwiyigisha'
+    | '/admin/login'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -135,6 +147,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   LoginRoute: typeof LoginRoute
+  AdminLoginRoute: typeof AdminLoginRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -202,6 +215,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedKwiyigishaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/admin/login': {
+      id: '/admin/login'
+      path: '/admin/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -229,6 +249,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   LoginRoute: LoginRoute,
+  AdminLoginRoute: AdminLoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

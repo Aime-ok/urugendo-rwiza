@@ -4,7 +4,7 @@ import { LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 
-export function LogoutButton() {
+export function LogoutButton({ admin = false }: { admin?: boolean }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -12,7 +12,7 @@ export function LogoutButton() {
     await queryClient.cancelQueries();
     queryClient.clear();
     await supabase.auth.signOut();
-    navigate({ to: "/auth", replace: true });
+    navigate({ to: admin ? "/admin/login" : "/login", replace: true });
   }
 
   return (
