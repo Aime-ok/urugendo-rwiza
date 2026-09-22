@@ -260,7 +260,7 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 function BackLink() {
   return (
-    <Link to="/ahabanza" className="mb-6 inline-flex items-center gap-2 text-sm text-foreground/80 hover:underline">
+    <Link to="/dashboard" className="mb-6 inline-flex items-center gap-2 text-sm text-foreground/80 hover:underline">
       <ArrowLeft className="size-4" /> Subira Ahabanza
     </Link>
   );
