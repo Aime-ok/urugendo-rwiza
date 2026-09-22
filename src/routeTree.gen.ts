@@ -22,7 +22,6 @@ import { Route as AuthenticatedUmwirondoroRouteImport } from './routes/_authenti
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedAdminDashboardRouteImport } from './routes/_authenticated/admin/dashboard'
-import { Route as ApiPublicSetupAdminRouteImport } from './routes/api/public/setup-admin'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -90,11 +89,6 @@ const AuthenticatedAdminDashboardRoute =
     path: '/dashboard',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
-const ApiPublicSetupAdminRoute = ApiPublicSetupAdminRouteImport.update({
-  id: '/api/public/setup-admin',
-  path: '/api/public/setup-admin',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -108,7 +102,6 @@ export interface FileRoutesByFullPath {
   '/umwirondoro': typeof AuthenticatedUmwirondoroRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
-  '/api/public/setup-admin': typeof ApiPublicSetupAdminRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesByTo {
@@ -122,7 +115,6 @@ export interface FileRoutesByTo {
   '/umwirondoro': typeof AuthenticatedUmwirondoroRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
-  '/api/public/setup-admin': typeof ApiPublicSetupAdminRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesById {
@@ -139,7 +131,6 @@ export interface FileRoutesById {
   '/_authenticated/umwirondoro': typeof AuthenticatedUmwirondoroRoute
   '/admin/login': typeof AdminLoginRoute
   '/_authenticated/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
-  '/api/public/setup-admin': typeof ApiPublicSetupAdminRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRouteTypes {
@@ -156,7 +147,6 @@ export interface FileRouteTypes {
     | '/umwirondoro'
     | '/admin/login'
     | '/admin/dashboard'
-    | '/api/public/setup-admin'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -170,7 +160,6 @@ export interface FileRouteTypes {
     | '/umwirondoro'
     | '/admin/login'
     | '/admin/dashboard'
-    | '/api/public/setup-admin'
     | '/admin'
   id:
     | '__root__'
@@ -186,7 +175,6 @@ export interface FileRouteTypes {
     | '/_authenticated/umwirondoro'
     | '/admin/login'
     | '/_authenticated/admin/dashboard'
-    | '/api/public/setup-admin'
     | '/_authenticated/admin/'
   fileRoutesById: FileRoutesById
 }
@@ -196,7 +184,6 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   LoginRoute: typeof LoginRoute
   AdminLoginRoute: typeof AdminLoginRoute
-  ApiPublicSetupAdminRoute: typeof ApiPublicSetupAdminRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -292,13 +279,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminDashboardRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
-    '/api/public/setup-admin': {
-      id: '/api/public/setup-admin'
-      path: '/api/public/setup-admin'
-      fullPath: '/api/public/setup-admin'
-      preLoaderRoute: typeof ApiPublicSetupAdminRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -345,7 +325,6 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   LoginRoute: LoginRoute,
   AdminLoginRoute: AdminLoginRoute,
-  ApiPublicSetupAdminRoute: ApiPublicSetupAdminRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
