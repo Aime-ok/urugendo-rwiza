@@ -13,12 +13,16 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAhabanzaRouteImport } from './routes/_authenticated/ahabanza'
 import { Route as AuthenticatedAmatekaRouteImport } from './routes/_authenticated/amateka'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedIkizaminiRouteImport } from './routes/_authenticated/ikizamini'
 import { Route as AuthenticatedKwiyigishaRouteImport } from './routes/_authenticated/kwiyigisha'
+import { Route as AuthenticatedUmwirondoroRouteImport } from './routes/_authenticated/umwirondoro'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -39,6 +43,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminRouteRoute = AuthenticatedAdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -54,6 +63,11 @@ const AuthenticatedAmatekaRoute = AuthenticatedAmatekaRouteImport.update({
   path: '/amateka',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedIkizaminiRoute = AuthenticatedIkizaminiRouteImport.update({
   id: '/ikizamini',
   path: '/ikizamini',
@@ -64,32 +78,48 @@ const AuthenticatedKwiyigishaRoute = AuthenticatedKwiyigishaRouteImport.update({
   path: '/kwiyigisha',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedUmwirondoroRoute =
+  AuthenticatedUmwirondoroRouteImport.update({
+    id: '/umwirondoro',
+    path: '/umwirondoro',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/admin/login',
   path: '/admin/login',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/login': typeof LoginRoute
-  '/admin': typeof AuthenticatedAdminRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/ahabanza': typeof AuthenticatedAhabanzaRoute
   '/amateka': typeof AuthenticatedAmatekaRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
   '/ikizamini': typeof AuthenticatedIkizaminiRoute
   '/kwiyigisha': typeof AuthenticatedKwiyigishaRoute
+  '/umwirondoro': typeof AuthenticatedUmwirondoroRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/login': typeof LoginRoute
-  '/admin': typeof AuthenticatedAdminRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
   '/ahabanza': typeof AuthenticatedAhabanzaRoute
   '/amateka': typeof AuthenticatedAmatekaRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
   '/ikizamini': typeof AuthenticatedIkizaminiRoute
   '/kwiyigisha': typeof AuthenticatedKwiyigishaRoute
+  '/umwirondoro': typeof AuthenticatedUmwirondoroRoute
   '/admin/login': typeof AdminLoginRoute
 }
 export interface FileRoutesById {
@@ -98,12 +128,15 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/login': typeof LoginRoute
-  '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/ahabanza': typeof AuthenticatedAhabanzaRoute
   '/_authenticated/amateka': typeof AuthenticatedAmatekaRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/ikizamini': typeof AuthenticatedIkizaminiRoute
   '/_authenticated/kwiyigisha': typeof AuthenticatedKwiyigishaRoute
+  '/_authenticated/umwirondoro': typeof AuthenticatedUmwirondoroRoute
   '/admin/login': typeof AdminLoginRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -114,9 +147,12 @@ export interface FileRouteTypes {
     | '/admin'
     | '/ahabanza'
     | '/amateka'
+    | '/dashboard'
     | '/ikizamini'
     | '/kwiyigisha'
+    | '/umwirondoro'
     | '/admin/login'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -125,8 +161,10 @@ export interface FileRouteTypes {
     | '/admin'
     | '/ahabanza'
     | '/amateka'
+    | '/dashboard'
     | '/ikizamini'
     | '/kwiyigisha'
+    | '/umwirondoro'
     | '/admin/login'
   id:
     | '__root__'
@@ -137,9 +175,12 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/ahabanza'
     | '/_authenticated/amateka'
+    | '/_authenticated/dashboard'
     | '/_authenticated/ikizamini'
     | '/_authenticated/kwiyigisha'
+    | '/_authenticated/umwirondoro'
     | '/admin/login'
+    | '/_authenticated/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -184,6 +225,13 @@ declare module '@tanstack/react-router' {
       id: '/_authenticated/admin'
       path: '/admin'
       fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
@@ -201,6 +249,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAmatekaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ikizamini': {
       id: '/_authenticated/ikizamini'
       path: '/ikizamini'
@@ -215,6 +270,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedKwiyigishaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/umwirondoro': {
+      id: '/_authenticated/umwirondoro'
+      path: '/umwirondoro'
+      fullPath: '/umwirondoro'
+      preLoaderRoute: typeof AuthenticatedUmwirondoroRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/admin/login': {
       id: '/admin/login'
       path: '/admin/login'
@@ -222,23 +284,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
   }
 }
 
+interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+}
+
+const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+}
+
+const AuthenticatedAdminRouteWithChildren =
+  AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRoute
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedAhabanzaRoute: typeof AuthenticatedAhabanzaRoute
   AuthenticatedAmatekaRoute: typeof AuthenticatedAmatekaRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedIkizaminiRoute: typeof AuthenticatedIkizaminiRoute
   AuthenticatedKwiyigishaRoute: typeof AuthenticatedKwiyigishaRoute
+  AuthenticatedUmwirondoroRoute: typeof AuthenticatedUmwirondoroRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedAdminRouteRoute: AuthenticatedAdminRouteRoute,
+  AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedAhabanzaRoute: AuthenticatedAhabanzaRoute,
   AuthenticatedAmatekaRoute: AuthenticatedAmatekaRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedIkizaminiRoute: AuthenticatedIkizaminiRoute,
   AuthenticatedKwiyigishaRoute: AuthenticatedKwiyigishaRoute,
+  AuthenticatedUmwirondoroRoute: AuthenticatedUmwirondoroRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
