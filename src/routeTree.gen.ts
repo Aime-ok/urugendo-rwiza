@@ -14,7 +14,6 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
-import { Route as AuthenticatedAhabanzaRouteImport } from './routes/_authenticated/ahabanza'
 import { Route as AuthenticatedAmatekaRouteImport } from './routes/_authenticated/amateka'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedIkizaminiRouteImport } from './routes/_authenticated/ikizamini'
@@ -46,11 +45,6 @@ const LoginRoute = LoginRouteImport.update({
 const AuthenticatedAdminRouteRoute = AuthenticatedAdminRouteRouteImport.update({
   id: '/admin',
   path: '/admin',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedAhabanzaRoute = AuthenticatedAhabanzaRouteImport.update({
-  id: '/ahabanza',
-  path: '/ahabanza',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAmatekaRoute = AuthenticatedAmatekaRouteImport.update({
@@ -101,7 +95,6 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/login': typeof LoginRoute
   '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
-  '/ahabanza': typeof AuthenticatedAhabanzaRoute
   '/amateka': typeof AuthenticatedAmatekaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/ikizamini': typeof AuthenticatedIkizaminiRoute
@@ -115,7 +108,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/login': typeof LoginRoute
-  '/ahabanza': typeof AuthenticatedAhabanzaRoute
   '/amateka': typeof AuthenticatedAmatekaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/ikizamini': typeof AuthenticatedIkizaminiRoute
@@ -132,7 +124,6 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/login': typeof LoginRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
-  '/_authenticated/ahabanza': typeof AuthenticatedAhabanzaRoute
   '/_authenticated/amateka': typeof AuthenticatedAmatekaRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/ikizamini': typeof AuthenticatedIkizaminiRoute
@@ -149,7 +140,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/login'
     | '/admin'
-    | '/ahabanza'
     | '/amateka'
     | '/dashboard'
     | '/ikizamini'
@@ -163,7 +153,6 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/login'
-    | '/ahabanza'
     | '/amateka'
     | '/dashboard'
     | '/ikizamini'
@@ -179,7 +168,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/login'
     | '/_authenticated/admin'
-    | '/_authenticated/ahabanza'
     | '/_authenticated/amateka'
     | '/_authenticated/dashboard'
     | '/_authenticated/ikizamini'
@@ -233,13 +221,6 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AuthenticatedAdminRouteRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/ahabanza': {
-      id: '/_authenticated/ahabanza'
-      path: '/ahabanza'
-      fullPath: '/ahabanza'
-      preLoaderRoute: typeof AuthenticatedAhabanzaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/amateka': {
@@ -319,7 +300,6 @@ const AuthenticatedAdminRouteRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRouteWithChildren
-  AuthenticatedAhabanzaRoute: typeof AuthenticatedAhabanzaRoute
   AuthenticatedAmatekaRoute: typeof AuthenticatedAmatekaRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedIkizaminiRoute: typeof AuthenticatedIkizaminiRoute
@@ -329,7 +309,6 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRouteRoute: AuthenticatedAdminRouteRouteWithChildren,
-  AuthenticatedAhabanzaRoute: AuthenticatedAhabanzaRoute,
   AuthenticatedAmatekaRoute: AuthenticatedAmatekaRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedIkizaminiRoute: AuthenticatedIkizaminiRoute,
