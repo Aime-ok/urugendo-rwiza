@@ -10,6 +10,7 @@ export type StudyQuestion = {
   correct_index: number;
   explanation: string | null;
   difficulty: string;
+  image_url: string | null;
 };
 
 export const getStudyQuestions = createServerFn({ method: "POST" })
