@@ -28,16 +28,20 @@ export const getStudyQuestions = createServerFn({ method: "POST" })
 
     const { data: all } = await supabase
       .from("questions")
-      .select("id, question_text, options, correct_index, explanation, difficulty")
+      .select("id, question_text, options, correct_index, explanation, difficulty, image_url")
       .limit(1000);
 
-    const questions = (all ?? []).map((q) => ({
+    const { withSignedImages } = await import("./images.server");
+    const signedAll = await withSignedImages(supabase, all ?? []);
+
+    const questions = signedAll.map((q) => ({
       id: q.id,
       question_text: q.question_text,
       options: (q.options as unknown as string[]) ?? [],
       correct_index: q.correct_index,
       explanation: q.explanation,
       difficulty: q.difficulty,
+      image_url: q.image_url,
     }));
 
     let pool: StudyQuestion[];
