@@ -24,7 +24,7 @@ export const Route = createFileRoute("/_authenticated/ikizamini")({
 
 const DURATION = 20 * 60;
 
-type Q = { id: string; question_text: string; options: string[] };
+type Q = { id: string; question_text: string; options: string[]; image_url?: string | null };
 type Result = { correct: number; wrong: number; total: number; percentage: number; passed: boolean };
 type ReviewRow = Awaited<ReturnType<typeof getAttemptReview>>[number];
 

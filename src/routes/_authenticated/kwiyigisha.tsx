@@ -111,6 +111,13 @@ function StudyPage() {
 
         <div className="rounded-2xl bg-card p-6 text-card-foreground shadow-xl">
           <h2 className="text-lg font-bold">{q.question_text}</h2>
+          {q.image_url && (
+            <img
+              src={q.image_url}
+              alt="Ifoto y'ikibazo"
+              className="mt-3 max-h-64 w-auto rounded-xl border bg-white object-contain"
+            />
+          )}
           <div className="mt-4 space-y-3">
             {q.options.map((opt, i) => {
               const isCorrect = i === q.correct_index;
