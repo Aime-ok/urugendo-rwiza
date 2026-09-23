@@ -22,6 +22,20 @@
       "when": 1789990731903,
       "tag": "0002_auth_roles_profiles_categories",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790141192907,
+      "tag": "0003_question_import_fields",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790141213605,
+      "tag": "0004_question_images_storage_policies",
+      "breakpoints": true
     }
   ]
 }

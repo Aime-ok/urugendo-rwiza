@@ -24,7 +24,7 @@ export const Route = createFileRoute("/_authenticated/ikizamini")({
 
 const DURATION = 20 * 60;
 
-type Q = { id: string; question_text: string; options: string[] };
+type Q = { id: string; question_text: string; options: string[]; image_url?: string | null };
 type Result = { correct: number; wrong: number; total: number; percentage: number; passed: boolean };
 type ReviewRow = Awaited<ReturnType<typeof getAttemptReview>>[number];
 
@@ -141,6 +141,13 @@ function ExamPage() {
                     )}
                     {i + 1}. {r.questionText}
                   </p>
+                  {r.imageUrl && (
+                    <img
+                      src={r.imageUrl}
+                      alt="Ifoto y'ikibazo"
+                      className="mt-2 max-h-48 w-auto rounded-lg border bg-white object-contain"
+                    />
+                  )}
                   <p className="mt-2 text-sm">
                     <span className="font-semibold">Igisubizo watanze: </span>
                     {r.selectedIndex === null ? "Nta gisubizo" : `${"ABCD"[r.selectedIndex]}. ${r.options[r.selectedIndex]}`}
@@ -211,6 +218,13 @@ function ExamPage() {
 
         <div className="rounded-2xl bg-card p-6 text-card-foreground shadow-xl">
           <h2 className="text-lg font-bold">{q.question_text}</h2>
+          {q.image_url && (
+            <img
+              src={q.image_url}
+              alt="Ifoto y'ikibazo"
+              className="mt-3 max-h-64 w-auto rounded-xl border bg-white object-contain"
+            />
+          )}
           <div className="mt-4 space-y-3">
             {q.options.map((opt, i) => (
               <button

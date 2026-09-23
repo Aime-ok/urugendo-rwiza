@@ -13,7 +13,7 @@ export const startExam = createServerFn({ method: "POST" })
 
     const { data: all } = await supabase
       .from("questions")
-      .select("id, question_text, options, difficulty")
+      .select("id, question_text, options, difficulty, image_url")
       .limit(1000);
 
     const questions = all ?? [];
@@ -50,12 +50,16 @@ export const startExam = createServerFn({ method: "POST" })
       })),
     );
 
+    const { withSignedImages } = await import("./images.server");
+    const signed = await withSignedImages(supabase, ordered);
+
     return {
       attemptId: attempt.id as string,
-      questions: ordered.map((q) => ({
+      questions: signed.map((q) => ({
         id: q.id,
         question_text: q.question_text,
         options: (q.options as unknown as string[]) ?? [],
+        image_url: q.image_url,
       })),
     };
   });
@@ -176,10 +180,12 @@ export const getAttemptReview = createServerFn({ method: "POST" })
     const ids = (answers ?? []).map((a) => a.question_id);
     const { data: questions } = await context.supabase
       .from("questions")
-      .select("id, question_text, options, correct_index, explanation")
+      .select("id, question_text, options, correct_index, explanation, image_url")
       .in("id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
 
-    const byId = new Map((questions ?? []).map((q) => [q.id, q]));
+    const { withSignedImages } = await import("./images.server");
+    const signedQuestions = await withSignedImages(context.supabase, questions ?? []);
+    const byId = new Map(signedQuestions.map((q) => [q.id, q]));
 
     return (answers ?? []).map((a) => {
       const q = byId.get(a.question_id);
@@ -189,6 +195,7 @@ export const getAttemptReview = createServerFn({ method: "POST" })
         options: ((q?.options as unknown as string[]) ?? []),
         correctIndex: q?.correct_index ?? 0,
         explanation: q?.explanation ?? null,
+        imageUrl: q?.image_url ?? null,
         selectedIndex: a.selected_index,
         isCorrect: a.is_correct ?? false,
       };

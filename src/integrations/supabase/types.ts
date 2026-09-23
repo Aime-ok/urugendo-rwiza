@@ -232,8 +232,14 @@ export type Database = {
           difficulty: string
           explanation: string | null
           id: string
+          image_url: string | null
+          import_source: string
+          needs_review: boolean
           options: Json
           question_text: string
+          raw_text: string | null
+          source_order: number | null
+          source_page: number | null
           status: string
           topic: string | null
         }
@@ -245,8 +251,14 @@ export type Database = {
           difficulty?: string
           explanation?: string | null
           id?: string
+          image_url?: string | null
+          import_source?: string
+          needs_review?: boolean
           options: Json
           question_text: string
+          raw_text?: string | null
+          source_order?: number | null
+          source_page?: number | null
           status?: string
           topic?: string | null
         }
@@ -258,8 +270,14 @@ export type Database = {
           difficulty?: string
           explanation?: string | null
           id?: string
+          image_url?: string | null
+          import_source?: string
+          needs_review?: boolean
           options?: Json
           question_text?: string
+          raw_text?: string | null
+          source_order?: number | null
+          source_page?: number | null
           status?: string
           topic?: string | null
         }
