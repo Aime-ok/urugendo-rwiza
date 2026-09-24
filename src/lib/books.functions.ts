@@ -113,10 +113,14 @@ export const listQuestions = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data } = await context.supabase
       .from("questions")
-      .select("id, question_text, options, correct_index, explanation, difficulty, topic, book_id")
-      .order("created_at", { ascending: false })
+      .select(
+        "id, question_text, options, correct_index, explanation, difficulty, topic, book_id, image_url, source_order, needs_review",
+      )
+      .order("source_order", { ascending: true, nullsFirst: false })
       .limit(500);
-    return data ?? [];
+
+    const { withSignedImages } = await import("./images.server");
+    return withSignedImages(context.supabase, data ?? []);
   });
 
 const questionInput = z.object({
