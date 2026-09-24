@@ -117,36 +117,39 @@ function AdminPage() {
         reader.readAsDataURL(file);
       });
 
-      const buffer = new Uint8Array(await file.arrayBuffer());
-      const { extractText, getDocumentProxy } = await import("unpdf");
-      const pdf = await getDocumentProxy(buffer);
-      const { text } = await extractText(pdf, { mergePages: true });
-      const content = String(text).trim();
-      if (content.length < 200) {
-        throw new Error("Iyi PDF nta nyandiko isomeka irimo (ishobora kuba ari amafoto).");
+      setProgress("Gusoma PDF...");
+      const { questions: parsed, text } = await parseQuestionsFromPdf(file, (p, total) =>
+        setProgress(`Gusoma urupapuro ${p}/${total}...`),
+      );
+      if (parsed.length === 0) {
+        throw new Error("Nta kibazo cyabonetse muri iyi PDF. Ohereza PDF ifite inyandiko isomeka.");
       }
 
-      const res = await upload({ data: { title: title.trim(), fileBase64: base64, content } });
-      toast.success(`Igitabo cyabitswe (inyuguti ${res.characters}).`);
+      setProgress("Kubika igitabo...");
+      const res = await upload({ data: { title: title.trim(), fileBase64: base64, content: text } });
+
+      let inserted = 0;
+      const batchSize = 25;
+      for (let i = 0; i < parsed.length; i += batchSize) {
+        setProgress(`Kwinjiza ibibazo ${i + 1}-${Math.min(i + batchSize, parsed.length)} / ${parsed.length}...`);
+        const out = await runImport({
+          data: {
+            bookId: res.book.id,
+            replaceExisting: i === 0,
+            questions: parsed.slice(i, i + batchSize),
+          },
+        });
+        inserted += out.inserted;
+      }
+
+      toast.success(`Ibibazo ${inserted} byinjijwe uko biri muri PDF.`);
       setTitle("");
       setFile(null);
-      await qc.invalidateQueries({ queryKey: ["books"] });
+      await qc.invalidateQueries();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Kohereza byanze.");
     } finally {
-      setBusy(false);
-    }
-  }
-
-  async function handleGenerate(bookId: string) {
-    setBusy(true);
-    try {
-      const res = await generate({ data: { bookId, count: 20 } });
-      toast.success(`Ibibazo ${res.created} byakozwe.`);
-      await qc.invalidateQueries({ queryKey: ["questions"] });
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Gukora ibibazo byanze.");
-    } finally {
+      setProgress("");
       setBusy(false);
     }
   }
