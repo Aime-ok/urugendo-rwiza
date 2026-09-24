@@ -17,8 +17,8 @@ const importedQuestion = z.object({
   number: z.number().int().min(1),
   page: z.number().int().min(1).optional(),
   questionText: z.string(),
-  options: z.array(z.string()).min(2).max(6),
-  correctIndex: z.number().int().min(0).max(5).nullable(),
+  options: z.array(z.string()).max(50),
+  correctIndex: z.number().int().min(0).nullable(),
   explanation: z.string().nullable().optional(),
   /** PNG image belonging to this question, base64 without the data: prefix. */
   imageBase64: z.string().nullable().optional(),
@@ -64,21 +64,32 @@ export const importQuestions = createServerFn({ method: "POST" })
         if (!error) imagePath = path;
       }
 
+      // Anything that doesn't look like a clean A–D question goes to admin review.
+      const badShape =
+        q.options.length < 2 ||
+        q.options.length > 4 ||
+        q.correctIndex === null ||
+        q.correctIndex > 3;
+      const needsReview = q.needsReview || badShape;
       const options = q.options.slice(0, 4);
       while (options.length < 4) options.push("");
+      const rawText =
+        q.options.length > 4
+          ? `${q.rawText ?? ""}\n[Ibisubizo byose byasomwe: ${q.options.length}]\n${q.options.join("\n")}`.trim()
+          : (q.rawText ?? null);
 
       rows.push({
         book_id: data.bookId,
         question_text: q.questionText,
         options,
-        correct_index: q.correctIndex ?? 0,
+        correct_index: q.correctIndex !== null && q.correctIndex <= 3 ? q.correctIndex : 0,
         explanation: q.explanation ?? null,
         difficulty: "medium",
-        status: q.needsReview ? "draft" : "published",
-        needs_review: q.needsReview || q.correctIndex === null,
+        status: needsReview ? "draft" : "published",
+        needs_review: needsReview,
         source_order: q.number,
         source_page: q.page ?? null,
-        raw_text: q.rawText ?? null,
+        raw_text: rawText,
         image_url: imagePath,
         import_source: "pdf",
       });
