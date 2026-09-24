@@ -133,7 +133,8 @@ export async function parseQuestionsFromPdf(
       const option = OPTION_START.exec(line.text);
       const start = QUESTION_START.exec(line.text);
 
-      if (start && !option && Number(start[1]) === questions.length + 1) {
+      const expected = current ? current.number + 1 : questions.length + 1;
+      if (start && !option && Number(start[1]) === expected) {
         await finish();
         current = {
           number: Number(start[1]),
