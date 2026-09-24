@@ -16,12 +16,14 @@ import {
   listBooks,
   setActiveBook,
   deleteBook,
-  generateQuestions,
   listQuestions,
   saveQuestion,
   deleteQuestion,
   adminOverview,
+  getBookFileUrl,
 } from "@/lib/books.functions";
+import { importQuestions, importStats, listReviewQuestions } from "@/lib/import.functions";
+import { parseQuestionsFromPdf } from "@/lib/pdf-import";
 
 export const Route = createFileRoute("/_authenticated/admin/dashboard")({
   head: () => ({
