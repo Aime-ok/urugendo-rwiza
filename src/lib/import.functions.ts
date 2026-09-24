@@ -84,7 +84,7 @@ export const importQuestions = createServerFn({ method: "POST" })
       });
     }
 
-    const { error } = await supabase.from("questions").insert(rows);
+    const { error } = await supabase.from("questions").insert(rows as never);
     if (error) throw new Error(error.message);
 
     return { inserted: rows.length };

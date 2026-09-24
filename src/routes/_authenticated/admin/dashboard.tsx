@@ -16,12 +16,14 @@ import {
   listBooks,
   setActiveBook,
   deleteBook,
-  generateQuestions,
   listQuestions,
   saveQuestion,
   deleteQuestion,
   adminOverview,
+  getBookFileUrl,
 } from "@/lib/books.functions";
+import { importQuestions, importStats, listReviewQuestions } from "@/lib/import.functions";
+import { parseQuestionsFromPdf } from "@/lib/pdf-import";
 
 export const Route = createFileRoute("/_authenticated/admin/dashboard")({
   head: () => ({
@@ -63,7 +65,10 @@ function AdminPage() {
   const books = useServerFn(listBooks);
   const activate = useServerFn(setActiveBook);
   const removeBook = useServerFn(deleteBook);
-  const generate = useServerFn(generateQuestions);
+  const runImport = useServerFn(importQuestions);
+  const importCounts = useServerFn(importStats);
+  const reviewList = useServerFn(listReviewQuestions);
+  const bookUrl = useServerFn(getBookFileUrl);
   const questions = useServerFn(listQuestions);
   const save = useServerFn(saveQuestion);
   const removeQuestion = useServerFn(deleteQuestion);
@@ -79,10 +84,21 @@ function AdminPage() {
     enabled: isAdmin,
   });
   const { data: stats } = useQuery({ queryKey: ["overview"], queryFn: () => overview({}), enabled: isAdmin });
+  const { data: imported } = useQuery({
+    queryKey: ["import-stats"],
+    queryFn: () => importCounts({}),
+    enabled: isAdmin,
+  });
+  const { data: review } = useQuery({
+    queryKey: ["review-questions"],
+    queryFn: () => reviewList({}),
+    enabled: isAdmin,
+  });
 
   const [title, setTitle] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState("");
   const [draft, setDraft] = useState<Draft | null>(null);
 
   const activeBook = (bookList ?? []).find((b) => b.is_active);
@@ -101,36 +117,39 @@ function AdminPage() {
         reader.readAsDataURL(file);
       });
 
-      const buffer = new Uint8Array(await file.arrayBuffer());
-      const { extractText, getDocumentProxy } = await import("unpdf");
-      const pdf = await getDocumentProxy(buffer);
-      const { text } = await extractText(pdf, { mergePages: true });
-      const content = String(text).trim();
-      if (content.length < 200) {
-        throw new Error("Iyi PDF nta nyandiko isomeka irimo (ishobora kuba ari amafoto).");
+      setProgress("Gusoma PDF...");
+      const { questions: parsed, text } = await parseQuestionsFromPdf(file, (p, total) =>
+        setProgress(`Gusoma urupapuro ${p}/${total}...`),
+      );
+      if (parsed.length === 0) {
+        throw new Error("Nta kibazo cyabonetse muri iyi PDF. Ohereza PDF ifite inyandiko isomeka.");
       }
 
-      const res = await upload({ data: { title: title.trim(), fileBase64: base64, content } });
-      toast.success(`Igitabo cyabitswe (inyuguti ${res.characters}).`);
+      setProgress("Kubika igitabo...");
+      const res = await upload({ data: { title: title.trim(), fileBase64: base64, content: text } });
+
+      let inserted = 0;
+      const batchSize = 25;
+      for (let i = 0; i < parsed.length; i += batchSize) {
+        setProgress(`Kwinjiza ibibazo ${i + 1}-${Math.min(i + batchSize, parsed.length)} / ${parsed.length}...`);
+        const out = await runImport({
+          data: {
+            bookId: res.book.id,
+            replaceExisting: i === 0,
+            questions: parsed.slice(i, i + batchSize),
+          },
+        });
+        inserted += out.inserted;
+      }
+
+      toast.success(`Ibibazo ${inserted} byinjijwe uko biri muri PDF.`);
       setTitle("");
       setFile(null);
-      await qc.invalidateQueries({ queryKey: ["books"] });
+      await qc.invalidateQueries();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Kohereza byanze.");
     } finally {
-      setBusy(false);
-    }
-  }
-
-  async function handleGenerate(bookId: string) {
-    setBusy(true);
-    try {
-      const res = await generate({ data: { bookId, count: 20 } });
-      toast.success(`Ibibazo ${res.created} byakozwe.`);
-      await qc.invalidateQueries({ queryKey: ["questions"] });
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Gukora ibibazo byanze.");
-    } finally {
+      setProgress("");
       setBusy(false);
     }
   }
@@ -145,6 +164,13 @@ function AdminPage() {
         <Stat label="Ibibazo" value={String(stats?.questions ?? 0)} />
         <Stat label="Ibizamini byakozwe" value={String(stats?.exams ?? 0)} />
         <Stat label="Batsinze" value={`${stats?.passRate ?? 0}%`} />
+      </div>
+
+      <div className="mt-4 grid gap-4 sm:grid-cols-4">
+        <Stat label="Ibibazo byinjijwe" value={String(imported?.total ?? 0)} />
+        <Stat label="Ibifite amafoto" value={String(imported?.withImages ?? 0)} />
+        <Stat label="Ibidafite amafoto" value={String(imported?.withoutImages ?? 0)} />
+        <Stat label="Bisaba kugenzurwa" value={String(imported?.needsReview ?? 0)} />
       </div>
 
       <section className="mt-8 rounded-2xl bg-card p-6 text-card-foreground shadow-xl">
@@ -169,8 +195,12 @@ function AdminPage() {
           </div>
         </div>
         <Button className="mt-4 bg-primary" disabled={busy} onClick={handleUpload}>
-          {busy ? "Tegereza..." : "Ohereza igitabo"}
+          {busy ? "Tegereza..." : "Ohereza igitabo winjize ibibazo"}
         </Button>
+        {progress && <p className="mt-2 text-sm text-muted-foreground">{progress}</p>}
+        <p className="mt-2 text-xs text-muted-foreground">
+          Ibibazo byinjizwa uko byanditse muri PDF — nta na kimwe gihindurwa cyangwa cyongerwaho.
+        </p>
 
         <div className="mt-6 space-y-3">
           {(bookList ?? []).map((b) => (
@@ -185,10 +215,16 @@ function AdminPage() {
                 <Button
                   size="sm"
                   className="bg-accent text-accent-foreground hover:bg-accent/90"
-                  disabled={busy}
-                  onClick={() => handleGenerate(b.id)}
+                  onClick={async () => {
+                    try {
+                      const { url } = await bookUrl({ data: { bookId: b.id } });
+                      window.open(url, "_blank", "noopener");
+                    } catch {
+                      toast.error("Gufungura PDF byanze.");
+                    }
+                  }}
                 >
-                  Kora ibibazo
+                  Fungura PDF
                 </Button>
                 {!b.is_active && (
                   <Button
@@ -217,6 +253,29 @@ function AdminPage() {
           ))}
         </div>
       </section>
+
+      {(review?.length ?? 0) > 0 && (
+        <section className="mt-8 rounded-2xl bg-card p-6 text-card-foreground shadow-xl">
+          <h2 className="text-xl font-bold">Ibibazo bisaba kugenzurwa ({review?.length ?? 0})</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Ibi ntibyashoboye gusomwa neza muri PDF. Bigenzure ubihindure mu rutonde rw'ibibazo.
+          </p>
+          <div className="mt-4 space-y-3">
+            {(review ?? []).map((q) => (
+              <div key={q.id} className="rounded-xl border p-4">
+                <p className="text-sm font-semibold">
+                  {q.source_order ? `${q.source_order}. ` : ""}
+                  {q.question_text}
+                </p>
+                {q.image_url && (
+                  <img src={q.image_url} alt="Ifoto y'ikibazo" className="mt-2 max-h-48 rounded-lg" />
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
 
       <section className="mt-8 rounded-2xl bg-card p-6 text-card-foreground shadow-xl">
         <div className="flex items-center justify-between">

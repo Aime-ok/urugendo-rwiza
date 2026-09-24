@@ -89,68 +89,23 @@ export const deleteBook = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-export const generateQuestions = createServerFn({ method: "POST" })
+/** Temporary link so the admin can always open the original source PDF. */
+export const getBookFileUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
-    z.object({ bookId: z.string().uuid(), count: z.number().int().min(5).max(40).default(20) }).parse(d),
-  )
+  .inputValidator((d: unknown) => z.object({ bookId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
-    await assertAdmin(supabase, userId);
-
-    const { data: book } = await supabase
+    await assertAdmin(context.supabase, context.userId);
+    const { data: book } = await context.supabase
       .from("books")
-      .select("id, content")
+      .select("storage_path")
       .eq("id", data.bookId)
       .maybeSingle();
-    if (!book) throw new Error("Igitabo ntikibonetse.");
-
-    const content: string = book.content ?? "";
-    const { count: existing } = await supabase
-      .from("questions")
-      .select("id", { count: "exact", head: true })
-      .eq("book_id", book.id);
-
-    // Walk through the book so each generation round covers a different part.
-    const chunkSize = 9000;
-    const chunks = Math.max(1, Math.ceil(content.length / chunkSize));
-    const chunkIndex = ((existing ?? 0) / data.count) % chunks;
-    const start = Math.floor(chunkIndex) * chunkSize;
-    const excerpt = content.slice(start, start + chunkSize);
-
-    const { askModel, extractJsonArray } = await import("./ai.server");
-    const raw = await askModel(
-      `Uri umwarimu w'amategeko y'umuhanda mu Rwanda. Dore igice cy'igitabo cy'amasomo:\n\n"""${excerpt}"""\n\n` +
-        `Kora ibibazo ${data.count} by'ikizamini (multiple choice) MU KINYARWANDA, bishingiye GUSA kuri iyi nyandiko. ` +
-        `Ntukoreshe amakuru atari muri iyi nyandiko. Buri kibazo kigire ibisubizo 4 (A,B,C,D), igisubizo kimwe cy'ukuri, ` +
-        `n'ubusobanuro bugufi bushingiye ku nyandiko. Vanga ibibazo byoroshye, biringaniye n'ibigoye.\n` +
-        `Subiza JSON gusa, urutonde rw'ibintu bifite: {"question": string, "options": [string,string,string,string], "correct_index": 0-3, "explanation": string, "difficulty": "easy"|"medium"|"hard", "topic": string}`,
-    );
-
-    const parsed = extractJsonArray(raw) as Array<Record<string, unknown>>;
-    const rows = parsed
-      .filter(
-        (q) =>
-          typeof q["question"] === "string" &&
-          Array.isArray(q["options"]) &&
-          (q["options"] as unknown[]).length === 4 &&
-          typeof q["correct_index"] === "number",
-      )
-      .map((q) => ({
-        book_id: book.id,
-        question_text: String(q["question"]),
-        options: (q["options"] as unknown[]).map(String),
-        correct_index: Math.min(3, Math.max(0, Number(q["correct_index"]))),
-        explanation: q["explanation"] ? String(q["explanation"]) : null,
-        difficulty: ["easy", "medium", "hard"].includes(String(q["difficulty"])) ? String(q["difficulty"]) : "medium",
-        topic: q["topic"] ? String(q["topic"]) : null,
-      }));
-
-    if (rows.length === 0) throw new Error("Nta bibazo byashoboye gukorwa. Ongera ugerageze.");
-
-    const { error } = await supabase.from("questions").insert(rows);
-    if (error) throw new Error(error.message);
-    return { created: rows.length };
+    if (!book?.storage_path) throw new Error("Iyi dosiye ntibonetse.");
+    const { data: signed } = await context.supabase.storage
+      .from("books")
+      .createSignedUrl(book.storage_path, 60 * 30);
+    if (!signed?.signedUrl) throw new Error("Gufungura dosiye byanze.");
+    return { url: signed.signedUrl };
   });
 
 export const listQuestions = createServerFn({ method: "GET" })
@@ -158,10 +113,14 @@ export const listQuestions = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data } = await context.supabase
       .from("questions")
-      .select("id, question_text, options, correct_index, explanation, difficulty, topic, book_id")
-      .order("created_at", { ascending: false })
+      .select(
+        "id, question_text, options, correct_index, explanation, difficulty, topic, book_id, image_url, source_order, needs_review",
+      )
+      .order("source_order", { ascending: true, nullsFirst: false })
       .limit(500);
-    return data ?? [];
+
+    const { withSignedImages } = await import("./images.server");
+    return withSignedImages(context.supabase, data ?? []);
   });
 
 const questionInput = z.object({

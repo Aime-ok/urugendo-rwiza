@@ -4,7 +4,7 @@ type StorageClient = {
       createSignedUrls: (
         paths: string[],
         expiresIn: number,
-      ) => Promise<{ data: Array<{ path: string | null; signedUrl: string }> | null }>;
+      ) => Promise<{ data: Array<{ path: string | null; signedUrl: string | null }> | null }>;
     };
   };
 };
