@@ -254,6 +254,29 @@ function AdminPage() {
         </div>
       </section>
 
+      {(review?.length ?? 0) > 0 && (
+        <section className="mt-8 rounded-2xl bg-card p-6 text-card-foreground shadow-xl">
+          <h2 className="text-xl font-bold">Ibibazo bisaba kugenzurwa ({review?.length ?? 0})</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Ibi ntibyashoboye gusomwa neza muri PDF. Bigenzure ubihindure mu rutonde rw'ibibazo.
+          </p>
+          <div className="mt-4 space-y-3">
+            {(review ?? []).map((q) => (
+              <div key={q.id} className="rounded-xl border p-4">
+                <p className="text-sm font-semibold">
+                  {q.source_order ? `${q.source_order}. ` : ""}
+                  {q.question_text}
+                </p>
+                {q.image_url && (
+                  <img src={q.image_url} alt="Ifoto y'ikibazo" className="mt-2 max-h-48 rounded-lg" />
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+
       <section className="mt-8 rounded-2xl bg-card p-6 text-card-foreground shadow-xl">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold">Ibibazo ({questionList?.length ?? 0})</h2>
