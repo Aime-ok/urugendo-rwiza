@@ -102,7 +102,7 @@ export async function parseQuestionsFromPdf(
         current.firstOptionY,
       );
     }
-    current.needsReview = current.options.length < 2 || current.correctIndex === null;
+    current.needsReview = current.options.length < 2 || current.options.length > 4 || current.correctIndex === null;
     const { startY: _s, firstOptionY: _f, ...rest } = current;
     questions.push(rest);
     current = null;
