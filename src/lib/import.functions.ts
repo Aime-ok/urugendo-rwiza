@@ -51,7 +51,6 @@ export const importQuestions = createServerFn({ method: "POST" })
       await supabase.from("questions").delete().eq("book_id", data.bookId);
     }
 
-    type QuestionInsert = Parameters<ReturnType<typeof supabase.from<"questions">>["insert"]>[0];
     const rows: Array<Record<string, unknown>> = [];
 
     for (const q of data.questions) {
