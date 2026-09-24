@@ -166,6 +166,13 @@ function AdminPage() {
         <Stat label="Batsinze" value={`${stats?.passRate ?? 0}%`} />
       </div>
 
+      <div className="mt-4 grid gap-4 sm:grid-cols-4">
+        <Stat label="Ibibazo byinjijwe" value={String(imported?.total ?? 0)} />
+        <Stat label="Ibifite amafoto" value={String(imported?.withImages ?? 0)} />
+        <Stat label="Ibidafite amafoto" value={String(imported?.withoutImages ?? 0)} />
+        <Stat label="Bisaba kugenzurwa" value={String(imported?.needsReview ?? 0)} />
+      </div>
+
       <section className="mt-8 rounded-2xl bg-card p-6 text-card-foreground shadow-xl">
         <h2 className="text-xl font-bold">Igitabo (PDF)</h2>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -188,8 +195,12 @@ function AdminPage() {
           </div>
         </div>
         <Button className="mt-4 bg-primary" disabled={busy} onClick={handleUpload}>
-          {busy ? "Tegereza..." : "Ohereza igitabo"}
+          {busy ? "Tegereza..." : "Ohereza igitabo winjize ibibazo"}
         </Button>
+        {progress && <p className="mt-2 text-sm text-muted-foreground">{progress}</p>}
+        <p className="mt-2 text-xs text-muted-foreground">
+          Ibibazo byinjizwa uko byanditse muri PDF — nta na kimwe gihindurwa cyangwa cyongerwaho.
+        </p>
 
         <div className="mt-6 space-y-3">
           {(bookList ?? []).map((b) => (
@@ -204,10 +215,16 @@ function AdminPage() {
                 <Button
                   size="sm"
                   className="bg-accent text-accent-foreground hover:bg-accent/90"
-                  disabled={busy}
-                  onClick={() => handleGenerate(b.id)}
+                  onClick={async () => {
+                    try {
+                      const { url } = await bookUrl({ data: { bookId: b.id } });
+                      window.open(url, "_blank", "noopener");
+                    } catch {
+                      toast.error("Gufungura PDF byanze.");
+                    }
+                  }}
                 >
-                  Kora ibibazo
+                  Fungura PDF
                 </Button>
                 {!b.is_active && (
                   <Button
