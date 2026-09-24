@@ -17,7 +17,7 @@ const importedQuestion = z.object({
   number: z.number().int().min(1),
   page: z.number().int().min(1).optional(),
   questionText: z.string(),
-  options: z.array(z.string()).max(50),
+  options: z.array(z.string()),
   correctIndex: z.number().int().min(0).nullable(),
   explanation: z.string().nullable().optional(),
   /** PNG image belonging to this question, base64 without the data: prefix. */
