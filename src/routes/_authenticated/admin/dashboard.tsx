@@ -84,10 +84,21 @@ function AdminPage() {
     enabled: isAdmin,
   });
   const { data: stats } = useQuery({ queryKey: ["overview"], queryFn: () => overview({}), enabled: isAdmin });
+  const { data: imported } = useQuery({
+    queryKey: ["import-stats"],
+    queryFn: () => importCounts({}),
+    enabled: isAdmin,
+  });
+  const { data: review } = useQuery({
+    queryKey: ["review-questions"],
+    queryFn: () => reviewList({}),
+    enabled: isAdmin,
+  });
 
   const [title, setTitle] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState("");
   const [draft, setDraft] = useState<Draft | null>(null);
 
   const activeBook = (bookList ?? []).find((b) => b.is_active);
