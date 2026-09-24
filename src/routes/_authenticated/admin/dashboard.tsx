@@ -65,7 +65,10 @@ function AdminPage() {
   const books = useServerFn(listBooks);
   const activate = useServerFn(setActiveBook);
   const removeBook = useServerFn(deleteBook);
-  const generate = useServerFn(generateQuestions);
+  const runImport = useServerFn(importQuestions);
+  const importCounts = useServerFn(importStats);
+  const reviewList = useServerFn(listReviewQuestions);
+  const bookUrl = useServerFn(getBookFileUrl);
   const questions = useServerFn(listQuestions);
   const save = useServerFn(saveQuestion);
   const removeQuestion = useServerFn(deleteQuestion);
