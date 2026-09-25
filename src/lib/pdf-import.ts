@@ -38,7 +38,7 @@ export type ImportReport = {
   topics: string[];
 };
 
-type TextLine = { kind: "line"; page: number; y: number; text: string };
+type TextLine = { kind: "line"; page: number; y: number; text: string; font: string };
 type ImageBox = { kind: "image"; page: number; y: number; rect: [number, number, number, number] };
 type Event = TextLine | ImageBox;
 
@@ -49,10 +49,12 @@ const OPTION_PLAIN = /^([a-f])\s*[.)]\s*(.*)$/i;
 const HEADING = /^[A-ZÀ-Ý’' \-]{3,60}$/;
 const LETTERS = "abcdef";
 
-function groupLines(page: number, items: Array<{ str: string; transform: number[] }>): TextLine[] {
+type Item = { str: string; transform: number[]; fontName?: string };
+
+function groupLines(page: number, items: Item[]): TextLine[] {
   const raw = items
     .filter((i) => i.str.trim().length > 0)
-    .map((i) => ({ y: i.transform[5] ?? 0, x: i.transform[4] ?? 0, text: i.str }));
+    .map((i) => ({ y: i.transform[5] ?? 0, x: i.transform[4] ?? 0, text: i.str, font: i.fontName ?? "" }));
 
   const buckets: Array<{ y: number; parts: typeof raw }> = [];
   for (const item of raw) {
@@ -61,9 +63,14 @@ function groupLines(page: number, items: Array<{ str: string; transform: number[
     else buckets.push({ y: item.y, parts: [item] });
   }
 
-  return buckets.map((b) => ({
+  return buckets.map((b) => {
+    const weight = new Map<string, number>();
+    for (const part of b.parts) weight.set(part.font, (weight.get(part.font) ?? 0) + part.text.trim().length);
+    const font = [...weight.entries()].sort((a, c) => c[1] - a[1])[0]?.[0] ?? "";
+    return {
     kind: "line" as const,
     page,
+    font,
     y: b.y,
     text: b.parts
       .sort((a, c) => a.x - c.x)
@@ -72,7 +79,8 @@ function groupLines(page: number, items: Array<{ str: string; transform: number[
       .replace(/\s+/g, " ")
       .replace(/\(\s+/g, "(")
       .trim(),
-  }));
+    };
+  });
 }
 
 type Matrix = [number, number, number, number, number, number];
@@ -160,7 +168,13 @@ function cropImages(crops: HTMLCanvasElement[]): string | null {
   return out.toDataURL("image/png").split(",")[1] ?? null;
 }
 
-type Working = Omit<ParsedQuestion, "imageBase64"> & { crops: HTMLCanvasElement[]; imageCount: number; lateImage: boolean };
+type Working = Omit<ParsedQuestion, "imageBase64"> & {
+  crops: HTMLCanvasElement[];
+  imageCount: number;
+  lateImage: boolean;
+  optionFonts: string[][];
+};
+type Finished = ParsedQuestion & { optionFonts: string[][]; imageCount: number };
 
 export async function parseQuestionsFromPdf(
   file: File,
@@ -171,7 +185,10 @@ export async function parseQuestionsFromPdf(
   const OPS = (pdfjs as unknown as { OPS: Record<string, number> }).OPS;
   const pdf = await getDocumentProxy(new Uint8Array(await file.arrayBuffer()));
 
-  const questions: ParsedQuestion[] = [];
+  const questions: Finished[] = [];
+  const markedFonts = new Map<string, number>();
+  const plainFonts = new Map<string, number>();
+  const bump = (m: Map<string, number>, k: string) => m.set(k, (m.get(k) ?? 0) + 1);
   let fullText = "";
   let topic: string | null = null;
   let current: Working | null = null;
@@ -180,17 +197,13 @@ export async function parseQuestionsFromPdf(
   const finish = () => {
     if (!current) return;
     const reasons: string[] = [];
-    if (current.options.length < 2) reasons.push("Ibisubizo ntibyasomwe neza");
-    if (current.correctIndex === null) reasons.push("Igisubizo nyacyo ntikigaragara muri PDF");
-    if (!current.questionText.trim()) reasons.push("Umwandiko w'ikibazo urabura");
-    if (current.lateImage) reasons.push("Ifoto yabonetse nyuma y'ibisubizo");
+    if (current.lateImage) reasons.push("Ifoto yabonetse hagati y'ibisubizo");
     if (current.imageCount > 0 && current.crops.length === 0 && typeof document !== "undefined")
       reasons.push("Ifoto ntiyashoboye gukatwa");
-    const { crops, imageCount: _c, lateImage: _l, ...rest } = current;
+    const { crops, lateImage: _l, ...rest } = current;
     questions.push({
       ...rest,
       imageBase64: typeof document !== "undefined" ? cropImages(crops) : null,
-      needsReview: reasons.length > 0,
       reviewReason: reasons.length ? reasons.join("; ") : null,
     });
     current = null;
@@ -200,7 +213,7 @@ export async function parseQuestionsFromPdf(
     onProgress?.(p, pdf.numPages);
     const page = await pdf.getPage(p);
     const content = await page.getTextContent();
-    const lines = groupLines(p, content.items as Array<{ str: string; transform: number[] }>);
+    const lines = groupLines(p, content.items as Item[]);
     const images = await findImages(page, p, OPS);
     const rendered = images.length > 0 ? await renderPage(page) : null;
 
@@ -243,26 +256,46 @@ export async function parseQuestionsFromPdf(
         continue;
       }
 
-      const text = ev.text;
-      if (NOISE.some((r) => r.test(text))) continue;
+      handleLine(ev.text, ev.font, p);
+    }
+  }
+
+  function handleLine(text: string, font: string, p: number) {
+      if (NOISE.some((r) => r.test(text))) return;
 
       const cur: Working | null = current;
       const nextLetter = LETTERS[cur?.options.length ?? 0];
       const marked = OPTION_MARKED.exec(text);
       const plain = OPTION_PLAIN.exec(text);
       const start = QUESTION_START.exec(text);
+      const opt = cur && marked && marked[1]!.toLowerCase() === nextLetter ? marked : cur && plain && plain[1]!.toLowerCase() === nextLetter ? plain : null;
 
-      if (cur && marked && marked[1]!.toLowerCase() === nextLetter) {
-        cur.options.push((marked[2] ?? "").trim());
-        if (cur.correctIndex === null) cur.correctIndex = cur.options.length - 1;
-        else cur.correctIndex = -1; // two marked answers — unreliable
+      if (cur && opt) {
+        const isMarked = opt === marked;
+        let rest = (opt[2] ?? "").trim();
+        let spill: string | null = null;
+        // "a) b) (c) d)" — letters printed under picture choices.
+        const nextMarker = /^\(?\s*([a-f])\s*(?:\.\s*\)|\)|\.)/i.exec(rest);
+        if (nextMarker && nextMarker[1]!.toLowerCase() === LETTERS[cur.options.length + 1]) {
+          spill = rest;
+          rest = "";
+        } else {
+          // Next question printed on the same line after an empty choice.
+          const q = QUESTION_START.exec(rest);
+          if (q && Number(q[1]) === cur.number + 1 && rest.length > 0 && /^\d/.test(rest)) {
+            spill = rest;
+            rest = "";
+          }
+        }
+        cur.options.push(rest);
+        cur.optionFonts.push([font]);
+        if (isMarked) {
+          bump(markedFonts, font);
+          cur.correctIndex = cur.correctIndex === null ? cur.options.length - 1 : -1;
+        } else bump(plainFonts, font);
         cur.rawText += "\n" + text;
-        continue;
-      }
-      if (cur && plain && plain[1]!.toLowerCase() === nextLetter) {
-        cur.options.push((plain[2] ?? "").trim());
-        cur.rawText += "\n" + text;
-        continue;
+        if (spill) handleLine(spill, font, p);
+        return;
       }
 
       if (start && (!cur || cur.options.length >= 2 || Number(start[1]) === cur.number + 1)) {
@@ -282,25 +315,26 @@ export async function parseQuestionsFromPdf(
           crops: pendingCrops,
           imageCount: pendingCrops.length,
           lateImage: false,
+          optionFonts: [],
         };
         pendingCrops = [];
-        continue;
+        return;
       }
 
       if (HEADING.test(text) && /[A-Z]{3}/.test(text) && (!cur || cur.options.length >= 2)) {
         finish();
         topic = text.trim();
-        continue;
+        return;
       }
 
-      if (!cur) continue;
+      if (!cur) return;
       cur.rawText += "\n" + text;
       if (cur.options.length === 0) cur.questionText = `${cur.questionText} ${text}`.trim();
       else {
         const last = cur.options.length - 1;
         cur.options[last] = `${cur.options[last]} ${text}`.trim();
+        cur.optionFonts[last]!.push(font);
       }
-    }
   }
   finish();
 
@@ -324,5 +358,9 @@ export async function parseQuestionsFromPdf(
     topics: [...new Set(questions.map((q) => q.topic).filter((t): t is string => !!t))],
   };
 
-  return { questions, text: fullText, report };
+  return {
+    questions: questions.map(({ optionFonts: _f, imageCount: _i, ...q }) => q),
+    text: fullText,
+    report,
+  };
 }
